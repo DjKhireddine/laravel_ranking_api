@@ -1,0 +1,19 @@
+### GET request to example server
+GET http://localhost:8000/api/products
+
+###
+PUT http://localhost:8000/api/products/15
+Content-Type: application/json
+
+{
+    "title": "product 15",
+    "description": "content"
+}
+###
+POST http://localhost:8000/api/products
+Content-Type: application/json
+
+{
+    "name": "MacBook air",
+    "description": "MacBook air M4 16GO RAM 510GO SSD"
+}
