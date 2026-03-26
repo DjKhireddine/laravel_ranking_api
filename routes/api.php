@@ -4,12 +4,6 @@ use App\Http\Controllers\RankingController;
 use App\Product\ProductController;
 use Illuminate\Support\Facades\Route;
 
-Route::group(["prefix" => "products"], function () {
-    Route::get('/', [ProductController::class, 'index']);
-    Route::get('/{id}', [ProductController::class, 'show']);
-    Route::post('', [ProductController::class, 'create']);
-});
-
 /*
 |--------------------------------------------------------------------------
 | API Routes - Classements
