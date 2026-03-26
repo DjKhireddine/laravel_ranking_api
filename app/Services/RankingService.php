@@ -12,18 +12,20 @@ class RankingService {
 
     public function getTop10(string $mode)
     {
-        return Score::where('game_mode', $mode)
-            ->orderByDesc('score')
+        return Score::where('scores.game_mode', $mode)
+            ->join('players', 'players.id', '=', 'scores.player_id')
+            ->orderByDesc('scores.score')
             ->limit(10)
-            ->get(['player_id', 'player_name', 'score', 'created_at']);
+            ->get(['players.id as player_id', 'players.name as player_name', 'scores.score', 'scores.created_at']);
     }
 
     public function getPlayerRank(int $playerId, string $mode)
     {
-        $playerScore = Score::where('player_id', $playerId)
-            ->where('game_mode', $mode)
-            ->orderByDesc('score')
-            ->first();
+        $playerScore = Score::where('scores.player_id', $playerId)
+            ->where('scores.game_mode', $mode)
+            ->join('players', 'players.id', '=', 'scores.player_id')
+            ->orderByDesc('scores.score')
+            ->first(['players.name as player_name', 'scores.score']);
 
         if (!$playerScore) {
             return null;

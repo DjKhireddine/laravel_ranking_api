@@ -10,10 +10,9 @@ class RankingController extends Controller
     public function store(Request $request, RankingService $service)
     {
         $validated = $request->validate([
-            'player_id'   => 'required|integer|exists:players,id',
-            'player_name' => 'required|string',
-            'game_mode'   => 'required|string',
-            'score'       => 'required|integer|min:0',
+            'player_id' => 'required|integer|exists:players,id',
+            'game_mode' => 'required|string',
+            'score'     => 'required|integer|min:0',
         ]);
 
         return response()->json($service->recordScore($validated), 201);

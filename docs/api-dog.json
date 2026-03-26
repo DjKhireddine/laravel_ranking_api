@@ -1,0 +1,284 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Laravel Game Rankings API",
+    "description": "API de gestion des joueurs et des classements par mode de jeu.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost/api",
+      "description": "Local"
+    }
+  ],
+  "tags": [
+    { "name": "Players", "description": "Gestion des joueurs" },
+    { "name": "Scores", "description": "Enregistrement des scores" },
+    { "name": "Rankings", "description": "Classements par mode de jeu" }
+  ],
+  "paths": {
+    "/players": {
+      "post": {
+        "tags": ["Players"],
+        "summary": "Créer un joueur",
+        "description": "Enregistre un nouveau joueur. Retourne 409 si le pseudo est déjà pris.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "example": "Shadow42"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Joueur créé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer", "example": 1 },
+                    "name": { "type": "string", "example": "Shadow42" }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Pseudo déjà utilisé",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" },
+                "example": { "message": "Ce pseudo est déjà utilisé." }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation échouée",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scores": {
+      "post": {
+        "tags": ["Scores"],
+        "summary": "Enregistrer un score",
+        "description": "Soumet le score d'un joueur pour un mode de jeu donné.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["player_id", "game_mode", "score"],
+                "properties": {
+                  "player_id": {
+                    "type": "integer",
+                    "description": "ID du joueur (doit exister en base)",
+                    "example": 1
+                  },
+                  "game_mode": {
+                    "type": "string",
+                    "enum": ["classic", "time_attack"],
+                    "example": "classic"
+                  },
+                  "score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 47500
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Score enregistré",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Score" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation échouée (player_id inexistant, score négatif…)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rankings/{mode}": {
+      "get": {
+        "tags": ["Rankings"],
+        "summary": "Top 10 d'un mode de jeu",
+        "description": "Retourne les 10 meilleurs scores pour le mode spécifié, triés par score décroissant.",
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["classic", "time_attack"]
+            },
+            "example": "classic"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des 10 meilleurs scores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/RankingEntry" }
+                },
+                "example": [
+                  {
+                    "player_id": 3,
+                    "player_name": "UltraVitesse",
+                    "score": 94200,
+                    "created_at": "2026-03-26T10:00:00.000000Z"
+                  },
+                  {
+                    "player_id": 7,
+                    "player_name": "Shadow42",
+                    "score": 88700,
+                    "created_at": "2026-03-26T09:30:00.000000Z"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rankings/{mode}/player/{playerId}": {
+      "get": {
+        "tags": ["Rankings"],
+        "summary": "Classement d'un joueur",
+        "description": "Retourne le meilleur score d'un joueur et sa position dans le classement du mode donné.",
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["classic", "time_attack"]
+            },
+            "example": "classic"
+          },
+          {
+            "name": "playerId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 7
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Position et score du joueur",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PlayerRank" },
+                "example": {
+                  "player_id": 7,
+                  "player_name": "Shadow42",
+                  "score": 88700,
+                  "rank": 2
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Joueur introuvable ou pas encore de score pour ce mode",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" },
+                "example": { "message": "Joueur introuvable ou pas encore de score." }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Score": {
+        "type": "object",
+        "properties": {
+          "id":         { "type": "integer", "example": 42 },
+          "player_id":  { "type": "integer", "example": 1 },
+          "game_mode":  { "type": "string",  "example": "classic" },
+          "score":      { "type": "integer", "example": 47500 },
+          "created_at": { "type": "string",  "format": "date-time" },
+          "updated_at": { "type": "string",  "format": "date-time" }
+        }
+      },
+      "RankingEntry": {
+        "type": "object",
+        "properties": {
+          "player_id":   { "type": "integer", "example": 3 },
+          "player_name": { "type": "string",  "example": "UltraVitesse" },
+          "score":       { "type": "integer", "example": 94200 },
+          "created_at":  { "type": "string",  "format": "date-time" }
+        }
+      },
+      "PlayerRank": {
+        "type": "object",
+        "properties": {
+          "player_id":   { "type": "integer", "example": 7 },
+          "player_name": { "type": "string",  "example": "Shadow42" },
+          "score":       { "type": "integer", "example": 88700 },
+          "rank":        { "type": "integer", "example": 2 }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "The name field is required." },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "example": {
+              "name": ["The name field is required."]
+            }
+          }
+        }
+      }
+    }
+  }
+}

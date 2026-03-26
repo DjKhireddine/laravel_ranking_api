@@ -28,12 +28,11 @@ class ScoreSeeder extends Seeder
 
             foreach ($players as $player) {
                 DB::table('scores')->insert([
-                    'player_id'   => $player->id,
-                    'player_name' => $player->name,
-                    'game_mode'   => $mode,
-                    'score'       => $faker->numberBetween(5000, 95000),
-                    'created_at'  => now(),
-                    'updated_at'  => now(),
+                    'player_id'  => $player->id,
+                    'game_mode'  => $mode,
+                    'score'      => $faker->numberBetween(5000, 95000),
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
         }
