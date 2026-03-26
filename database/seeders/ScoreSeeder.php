@@ -21,7 +21,7 @@ class ScoreSeeder extends Seeder
             return;
         }
 
-        $modes = ['classic', 'time_attack'];
+        $modes = ['classic', 'timeattack'];
 
         foreach ($modes as $mode) {
             $this->command->info("Génération des scores pour le mode : $mode...");
